@@ -1,10 +1,19 @@
 library(dplyr)
 library(psych)
+library(ggplot2)
+library(lubridate)
+library(scales)
+library(gtable)
+
+
+MEMBER_COLOR <- "blue"
+CASUAL_COLOR <- "orange"
+ALL_COLOR <- "grey"
 
 # ======== PREPROCESSING ========
 
-trip_df = read.csv("../data/tripdata.csv")
-
+trip_df <- read.csv("./data/tripdata.csv")
+trip_df <- trip_df[, c("month", "year", "rideable_type", "member_casual", "started_at", "ended_at")]
 # Add time delta
 str(trip_df)
 
@@ -50,3 +59,30 @@ head(trip_df)
 describe(trip_df$price)
 
 
+# ======== PLOTS ========
+
+
+income_summary <- trip_df %>%
+  mutate(year_month = format(started_at, "%Y-%m")) %>%
+  group_by(year_month, member_casual) %>%
+  summarise(total_income = sum(price)) %>%
+  ungroup()
+
+total_income_all <- income_summary %>%
+  group_by(year_month) %>%
+  summarise(total_income = sum(total_income)) %>%
+  mutate(member_casual = "All")
+
+income_summary <- bind_rows(income_summary, total_income_all)
+
+#TODO: I cant make the x axis work with anything, I have been trying for over an hour at this point
+ggplot(income_summary, aes(x = year_month, y = total_income/1e6, color = member_casual, group = member_casual, fill = member_casual)) +
+  geom_ribbon(aes(ymin = 0, ymax = total_income/1e6), alpha = 0.2) +
+  geom_line() +
+  labs(title = "Summed Income by Member Type and Month",
+       x = "Month",
+       y = "Summed Income") +
+  scale_color_manual(values = c("member" = MEMBER_COLOR, "All" = ALL_COLOR, "casual" = CASUAL_COLOR)) +
+  scale_fill_manual(values = c("member" = MEMBER_COLOR, "All" = ALL_COLOR, "casual" = CASUAL_COLOR)) +
+  theme_minimal()
+  
