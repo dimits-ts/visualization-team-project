@@ -1,4 +1,8 @@
- 
+# ======== Custom ========
+raw/
+tripdata.csv
+
+# ======== R ========
 # History files
 .Rhistory
 .Rapp.history
@@ -19,7 +23,8 @@
 # Output files from R CMD check
 /*.Rcheck/
 
-# RStudio files
+# RStudio files\
+.Rproj
 .Rproj.user/
 
 # produced vignettes
@@ -48,3 +53,4 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+.Rproj.user
