@@ -5,10 +5,17 @@ library(lubridate)
 library(scales)
 library(gtable)
 
+OUTPUT_PATH = "output"
 
 MEMBER_COLOR <- "blue"
 CASUAL_COLOR <- "orange"
 ALL_COLOR <- "grey"
+
+# Utility function to get a relative file path (including file extension)
+# from a file name.
+filepath_png <- function(name) {
+  return(file.path(OUTPUT_PATH, paste(name, ".png", sep = "")))
+}
 
 # ======== PREPROCESSING ========
 
@@ -86,3 +93,4 @@ ggplot(income_summary, aes(x = year_month, y = total_income/1e6, color = member_
   scale_fill_manual(values = c("member" = MEMBER_COLOR, "All" = ALL_COLOR, "casual" = CASUAL_COLOR)) +
   theme_minimal()
   
+ggsave(filename=filepath_png("income_by_member_month"))
