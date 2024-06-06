@@ -12,7 +12,8 @@ trip_df$started_at <- as.POSIXct(as.character(trip_df$started_at), format="%Y-%m
 trip_df$ended_at <- as.POSIXct(as.character(trip_df$ended_at), format="%Y-%m-%d %H:%M:%S")
 trip_df <- trip_df %>%
   mutate(ride_duration = ended_at - started_at)
-
+# some ride seems to have end dates preceding start dates. We remove these false datapoints.
+trip_df <- trip_df[trip_df$ride_duration > 0, ]
 
 # Add pricing
 
@@ -47,3 +48,5 @@ trip_df <- trip_df %>%
 
 head(trip_df)
 describe(trip_df$price)
+
+
