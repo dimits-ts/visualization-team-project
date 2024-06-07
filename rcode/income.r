@@ -101,7 +101,38 @@ ggplot(income_summary, aes(x = year_month,
                                "casual" = CASUAL_COLOR),
                     guide = guide_legend(override.aes = list(shape = 16, size = 4))) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  #scale_x_date(date_labels = "%b-%Y")
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
   
 ggsave(filename=filepath_png("income_by_member_month"))
+
+
+
+income_by_member <- trip_df %>%
+  group_by(year, month, member_casual) %>%
+  summarise(total_income = sum(price), .groups = 'drop')
+
+# Calculate relative frequency (percentage) of income within each month and year
+income_by_member <- income_by_member %>%
+  group_by(year, month) %>%
+  mutate(percentage_income = (total_income / sum(total_income)) * 100)
+
+# Combine year and month into a single factor for the x-axis
+income_by_member <- income_by_member %>%
+  mutate(year_month = factor(paste(year, month, sep = "-"), levels = unique(paste(year, month, sep = "-"))))
+
+# Create a stacked bar plot using ggplot2
+ggplot(income_by_member, aes(x = year_month, y = percentage_income, fill = member_casual)) +
+  geom_bar(stat = "identity") +
+  geom_hline(yintercept = 50, linetype = "dashed", color = "red") +
+  labs(title = "Percentage of Income by Member Type",
+       x = "Date",
+       y = "Percentage of Income", 
+       fill="Member Type") +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  scale_fill_manual(values = c("member" = MEMBER_COLOR, 
+                               "casual" = CASUAL_COLOR),
+                    guide = guide_legend(override.aes = list(shape = 16, size = 4))) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave(filename=filepath_png("income_relative_member"))
