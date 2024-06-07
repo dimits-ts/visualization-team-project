@@ -46,6 +46,7 @@ calculate_price <- function(rideable_type, member_casual, ride_duration) {
   price <- 0
   
   if (member_casual == "casual") {
+    # include the upfront 1$ cost for unlocking the bike
     if (rideable_type == "classic_bike") {
       price <- 1 + 0.05 * duration_minutes
     } else if (rideable_type == "electric_bike") {
@@ -127,23 +128,16 @@ ggplot(income_summary, aes(x = year_month,
 ggsave(filename=filepath_png("income_by_member_month"))
 
 # Percentage income plot
+trip_df$month_number <- match(trip_df$month, month.name)
+
 income_by_member <- trip_df %>%
-  group_by(year, month, member_casual) %>%
-  summarise(total_income = sum(price), .groups = 'drop')
+  group_by(year, month_number, member_casual) %>%
+  summarise(total_income = sum(price), .groups = 'drop') %>%
+  group_by(year, month_number) %>%
+  mutate(percentage_income = (total_income / sum(total_income)) * 100) %>%
+  mutate(year_month = factor(paste(year, month_number, sep = "-"), 
+                             levels = unique(paste(year, month_number, sep = "-"))))
 
-sus_duration <- as.numeric(trip_df[trip_df$month=="May" & trip_df$year==2020,]$ride_duration)
-describe(sus_duration)
-
-# Calculate relative frequency (percentage) of income within each month and year
-income_by_member <- income_by_member %>%
-  group_by(year, month) %>%
-  mutate(percentage_income = (total_income / sum(total_income)) * 100)
-
-# Combine year and month into a single factor for the x-axis
-income_by_member <- income_by_member %>%
-  mutate(year_month = factor(paste(year, month, sep = "-"), levels = unique(paste(year, month, sep = "-"))))
-
-# Create a stacked bar plot using ggplot2
 ggplot(income_by_member, aes(x = year_month, y = percentage_income, fill = member_casual)) +
   geom_bar(stat = "identity") +
   geom_hline(yintercept = 50, linetype = "dashed", color = "red") +
