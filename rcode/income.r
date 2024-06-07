@@ -62,13 +62,28 @@ calculate_price <- function(rideable_type, member_casual, ride_duration) {
 trip_df <- trip_df %>%
   mutate(price = mapply(calculate_price, rideable_type, member_casual, ride_duration))
 
+# statistics and exploratory plots
 head(trip_df)
 describe(trip_df$price)
+ggplot(trip_df, aes(x = price)) +
+  geom_density(fill = "skyblue", color = "black") +
+  labs(title = "Distribution of Trip Prices",
+       x = "Price",
+       y = "Frequency") +
+  theme_minimal()
+
+describe(as.numeric(trip_df$ride_duration, units="mins"))
+ggplot(trip_df, aes(x = as.numeric(ride_duration, units = "mins"))) +
+  geom_density(fill = "skyblue", color = "black") +
+  labs(title = "Distribution of Trip Duration",
+       x = "Duration (minutes)",
+       y = "Frequency") +
+  theme_minimal()
 
 
 # ======== PLOTS ========
 
-
+# Sum income plot
 income_summary <- trip_df %>%
   mutate(year_month = format(started_at, "%Y-%m")) %>%
   group_by(year_month, member_casual) %>%
@@ -105,11 +120,15 @@ ggplot(income_summary, aes(x = year_month,
   
 ggsave(filename=filepath_png("income_by_member_month"))
 
-
-
+# Percentage income plot
 income_by_member <- trip_df %>%
   group_by(year, month, member_casual) %>%
   summarise(total_income = sum(price), .groups = 'drop')
+
+sus_duration <- as.numeric(trip_df[trip_df$month=="May" & trip_df$year==2020,]$ride_duration)
+describe(sus_duration)
+trip_df[trip_df$month=="May" & trip_df$year==2020 & is.na(trip_df$ride_duration),]
+trip_df[trip_df$month=="May" & trip_df$year==2020 & trip_df$ride_duration <= 0,]
 
 # Calculate relative frequency (percentage) of income within each month and year
 income_by_member <- income_by_member %>%
@@ -134,5 +153,5 @@ ggplot(income_by_member, aes(x = year_month, y = percentage_income, fill = membe
                     guide = guide_legend(override.aes = list(shape = 16, size = 4))) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
+  
 ggsave(filename=filepath_png("income_relative_member"))
