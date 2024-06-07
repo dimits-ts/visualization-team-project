@@ -83,14 +83,25 @@ total_income_all <- income_summary %>%
 income_summary <- bind_rows(income_summary, total_income_all)
 
 #TODO: I cant make the x axis work with anything, I have been trying for over an hour at this point
-ggplot(income_summary, aes(x = year_month, y = total_income/1e6, color = member_casual, group = member_casual, fill = member_casual)) +
-  geom_ribbon(aes(ymin = 0, ymax = total_income/1e6), alpha = 0.2) +
+ggplot(income_summary, aes(x = year_month, 
+                           y = total_income / 1e6, 
+                           color = member_casual, 
+                           group = member_casual, 
+                           fill = member_casual)) +
+  geom_ribbon(aes(ymin = 0, ymax = total_income / 1e6), alpha = 0.2) +
   geom_line() +
-  labs(title = "Summed Income by Member Type and Month",
+  labs(title = "Income by Member Type and Month",
        x = "Month",
-       y = "Summed Income") +
-  scale_color_manual(values = c("member" = MEMBER_COLOR, "All" = ALL_COLOR, "casual" = CASUAL_COLOR)) +
-  scale_fill_manual(values = c("member" = MEMBER_COLOR, "All" = ALL_COLOR, "casual" = CASUAL_COLOR)) +
-  theme_minimal()
+       y = "Income (Millions)") +
+  scale_color_manual(values = c("member" = MEMBER_COLOR, 
+                                "All" = ALL_COLOR, 
+                                "casual" = CASUAL_COLOR), guide=FALSE) +
+  scale_fill_manual(values = c("member" = MEMBER_COLOR, 
+                               "All" = ALL_COLOR, 
+                               "casual" = CASUAL_COLOR),
+                    guide = guide_legend(override.aes = list(shape = 16, size = 4))) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  #scale_x_date(date_labels = "%b-%Y")
   
 ggsave(filename=filepath_png("income_by_member_month"))
