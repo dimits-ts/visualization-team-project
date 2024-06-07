@@ -9,7 +9,10 @@ OUTPUT_PATH = "output"
 
 MEMBER_COLOR <- "blue"
 CASUAL_COLOR <- "orange"
-ALL_COLOR <- "grey"
+ALL_MEMBERS_COLOR <- "grey"
+
+CLASSIC_BIKE_COLOR = "darkgreen"
+ELECTRIC_BIKE_COLOR = "darkblue"
 
 # Utility function to get a relative file path (including file extension)
 # from a file name.
@@ -112,14 +115,14 @@ ggplot(income_summary, aes(x = year_month,
                            fill = member_casual)) +
   geom_ribbon(aes(ymin = 0, ymax = total_income / 1e6), alpha = 0.2) +
   geom_line() +
-  labs(title = "Income by Member Type and Month",
+  labs(title = "Revenue by Member Type and Month",
        x = "Month",
        y = "Income (Millions)") +
   scale_color_manual(values = c("member" = MEMBER_COLOR, 
-                                "All" = ALL_COLOR, 
+                                "All" = ALL_MEMBERS_COLOR, 
                                 "casual" = CASUAL_COLOR), guide=FALSE) +
   scale_fill_manual(values = c("member" = MEMBER_COLOR, 
-                               "All" = ALL_COLOR, 
+                               "All" = ALL_MEMBERS_COLOR, 
                                "casual" = CASUAL_COLOR),
                     guide = guide_legend(override.aes = list(shape = 16, size = 4))) +
   theme_minimal() +
@@ -141,7 +144,7 @@ income_by_member <- trip_df %>%
 ggplot(income_by_member, aes(x = year_month, y = percentage_income, fill = member_casual)) +
   geom_bar(stat = "identity") +
   geom_hline(yintercept = 50, linetype = "dashed", color = "red") +
-  labs(title = "Percentage of Income by Member Type",
+  labs(title = "Percentage of Revenue by Member Type",
        x = "Date",
        y = "Percentage of Income", 
        fill="Member Type") +
@@ -153,3 +156,31 @@ ggplot(income_by_member, aes(x = year_month, y = percentage_income, fill = membe
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
   
 ggsave(filename=filepath_png("income_relative_member"))
+
+
+# Bike type plot
+
+revenue_by_month_year <- trip_df %>%
+  mutate(year_month = format(started_at, "%Y-%m")) %>%
+  group_by(year_month, rideable_type) %>%
+  summarize(total_revenue = sum(price))
+
+ggplot(revenue_by_month_year, aes(x = year_month, 
+                                  y = total_revenue/10e6, 
+                                  color = rideable_type, 
+                                  fill = rideable_type, 
+                                  group = rideable_type)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = 0, ymax = total_revenue/10e6), alpha = 0.2) +
+  labs(title="Revenue by bike type", 
+       x = "Date", 
+       y = "Total Revenue ($ Millions)",
+       fill = "Rideable Type") +
+  scale_color_manual(values = c("classic_bike" = CLASSIC_BIKE_COLOR,
+                                "electric_bike" = ELECTRIC_BIKE_COLOR), guide=FALSE) +
+  scale_fill_manual(values = c("classic_bike" = CLASSIC_BIKE_COLOR,
+                               "electric_bike" = ELECTRIC_BIKE_COLOR), guide = guide_legend(override.aes = list(shape = 16, size = 4))) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave(filename=filepath_png("income_bike_type"))
