@@ -31,6 +31,13 @@ trip_df <- trip_df %>%
 # some ride seems to have end dates preceding start dates. We remove these false datapoints.
 trip_df <- trip_df[trip_df$ride_duration > 0, ]
 
+# what the fuck is a "docked_bike"
+# Im assuming docked bikes are just classic bikes
+# TODO: investigate
+levels(trip_df$rideable_type)
+trip_df[trip_df$rideable_type == "docked_bike", "rideable_type"] <- "classic_bike"
+sum(trip_df$rideable_type=="docked_bike")
+
 # Add pricing
 
 # Create a function to calculate the price for each trip
@@ -80,7 +87,6 @@ ggplot(trip_df, aes(x = as.numeric(ride_duration, units = "mins"))) +
        y = "Frequency") +
   theme_minimal()
 
-
 # ======== PLOTS ========
 
 # Sum income plot
@@ -127,8 +133,6 @@ income_by_member <- trip_df %>%
 
 sus_duration <- as.numeric(trip_df[trip_df$month=="May" & trip_df$year==2020,]$ride_duration)
 describe(sus_duration)
-trip_df[trip_df$month=="May" & trip_df$year==2020 & is.na(trip_df$ride_duration),]
-trip_df[trip_df$month=="May" & trip_df$year==2020 & trip_df$ride_duration <= 0,]
 
 # Calculate relative frequency (percentage) of income within each month and year
 income_by_member <- income_by_member %>%
