@@ -92,9 +92,8 @@ ggplot(trip_df, aes(x = as.numeric(ride_duration, units = "mins"))) +
        y = "Frequency") +
   theme_minimal()
 
-# ======== PLOTS ========
+# ======== Sum income plot ========
 
-# Sum income plot
 income_summary <- trip_df %>%
   mutate(year_month = format(started_at, "%Y-%m")) %>%
   group_by(year_month, member_casual) %>%
@@ -107,27 +106,27 @@ total_income_all <- income_summary %>%
 
 income_summary <- bind_rows(income_summary, total_income_all)
 
-plot1 <- ggplot(income_summary, aes(x = year_month, 
+plot1_member <- ggplot(income_summary, aes(x = year_month, 
                                     y = total_income / 1e6, 
                                     color = member_casual, 
                                     group = member_casual, 
                                     fill = member_casual)) +
-  geom_ribbon(aes(ymin = 0, ymax = total_income / 1e6), alpha = 0.2) +
-  geom_line() +
-  labs(title="Membership revenues increasingly more important each summer",
-       subtitle = "Summer revenue by member type",
-       x = "Month",
-       y = "Income ($ Millions)",
-       fill="Member Type") +
-  scale_color_manual(values = c("member" = MEMBER_COLOR, 
-                                "All" = ALL_MEMBERS_COLOR, 
-                                "casual" = CASUAL_COLOR), guide=FALSE) +
-  scale_fill_manual(values = c("member" = MEMBER_COLOR, 
-                               "All" = ALL_MEMBERS_COLOR, 
-                               "casual" = CASUAL_COLOR),
-                    guide = guide_legend(override.aes = list(shape = 16, size = 4))) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+                      geom_ribbon(aes(ymin = 0, ymax = total_income / 1e6), alpha = 0.2) +
+                      geom_line() +
+                      labs(title="Membership revenues increasingly more important each summer",
+                           subtitle = "Summer revenue by member type",
+                           x = "Month",
+                           y = "Income ($ Millions)",
+                           fill="Member Type") +
+                      scale_color_manual(values = c("member" = MEMBER_COLOR, 
+                                                    "All" = ALL_MEMBERS_COLOR, 
+                                                    "casual" = CASUAL_COLOR), guide=FALSE) +
+                      scale_fill_manual(values = c("member" = MEMBER_COLOR, 
+                                                   "All" = ALL_MEMBERS_COLOR, 
+                                                   "casual" = CASUAL_COLOR),
+                                        guide = guide_legend(override.aes = list(shape = 16, size = 4))) +
+                      theme_minimal() +
+                      theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Percentage income plot
 trip_df$month_number <- match(trip_df$month, month.name)
@@ -140,7 +139,7 @@ income_by_member <- trip_df %>%
   mutate(year_month = factor(paste(year, month_number, sep = "-"), 
                              levels = unique(paste(year, month_number, sep = "-"))))
 
-plot2 <- ggplot(income_by_member, aes(x = year_month, y = percentage_income, fill = member_casual)) +
+plot2_member <- ggplot(income_by_member, aes(x = year_month, y = percentage_income, fill = member_casual)) +
   geom_bar(stat = "identity") +
   geom_hline(yintercept = 50, linetype = "dashed", color = "red") +
   labs(title="", # correctly offset title
@@ -155,41 +154,36 @@ plot2 <- ggplot(income_by_member, aes(x = year_month, y = percentage_income, fil
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# Combine plots
-combined_plot <- grid.arrange(plot1, plot2, ncol = 2)
-ggsave(filename=filepath_png("income_member"), plot = combined_plot)
+combined_plot_member <- grid.arrange(plot1_member, plot2_member, ncol = 2)
+ggsave(filename=filepath_png("income_member"), plot = combined_plot_member)
 
 
-# Bike type plot
+# ======== Bike type plot ========
 
 revenue_by_month_year <- trip_df %>%
   mutate(year_month = format(started_at, "%Y-%m")) %>%
   group_by(year_month, rideable_type) %>%
   summarize(total_revenue = sum(price))
 
-ggplot(revenue_by_month_year, aes(x = year_month, 
+plot1_biketype <- ggplot(revenue_by_month_year, aes(x = year_month, 
                                   y = total_revenue/10e6, 
                                   color = rideable_type, 
                                   fill = rideable_type, 
                                   group = rideable_type)) +
-  geom_line() +
-  geom_ribbon(aes(ymin = 0, ymax = total_revenue/10e6), alpha = 0.2) +
-  labs(title="Electric bikes increasingly profitable each summer",
-       subtitle="Revenue by bike type", 
-       x = "Date", 
-       y = "Total Revenue ($ Millions)",
-       fill = "Rideable Type") +
-  scale_color_manual(values = c("classic_bike" = CLASSIC_BIKE_COLOR,
-                                "electric_bike" = ELECTRIC_BIKE_COLOR), guide=FALSE) +
-  scale_fill_manual(values = c("classic_bike" = CLASSIC_BIKE_COLOR,
-                               "electric_bike" = ELECTRIC_BIKE_COLOR), 
-                    guide = guide_legend(override.aes = list(shape = 16, size = 4))) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-ggsave(filename=filepath_png("income_bike_type"))
-
-# ================ A ===============
+                        geom_line() +
+                        geom_ribbon(aes(ymin = 0, ymax = total_revenue/10e6), alpha = 0.2) +
+                        labs(title="Electric bikes increasingly profitable each summer",
+                             subtitle="Revenue by bike type", 
+                             x = "Date", 
+                             y = "Total Revenue ($ Millions)",
+                             fill = "Rideable Type") +
+                        scale_color_manual(values = c("classic_bike" = CLASSIC_BIKE_COLOR,
+                                                      "electric_bike" = ELECTRIC_BIKE_COLOR), guide=FALSE) +
+                        scale_fill_manual(values = c("classic_bike" = CLASSIC_BIKE_COLOR,
+                                                     "electric_bike" = ELECTRIC_BIKE_COLOR), 
+                                          guide = guide_legend(override.aes = list(shape = 16, size = 4))) +
+                        theme_minimal() +
+                        theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 income_by_rideable <- trip_df %>%
@@ -200,17 +194,20 @@ income_by_rideable <- trip_df %>%
   mutate(year_month = factor(paste(year, month_number, sep = "-"), 
                              levels = unique(paste(year, month_number, sep = "-"))))
 
-ggplot(income_by_rideable, aes(x = year_month, y = percentage_income, fill = rideable_type)) +
-  geom_bar(stat = "identity") +
-  geom_hline(yintercept = 50, linetype = "dashed", color = "red") +
-  labs(title="", # correctly offset title
-       subtitle = "Revenue share by member type",
-       x = "Month",
-       y = "Revenue (%)", 
-       fill="Member Type") +
-  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
-  scale_fill_manual(values = c("classic_bike" = CLASSIC_BIKE_COLOR, 
-                               "electric_bike" = ELECTRIC_BIKE_COLOR),
-                    guide = guide_legend(override.aes = list(shape = 16, size = 4))) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+plot2_biketype <- ggplot(income_by_rideable, aes(x = year_month, y = percentage_income, fill = rideable_type)) +
+                        geom_bar(stat = "identity", alpha=0.5) +
+                        geom_hline(yintercept = 50, linetype = "dashed", color = "red") +
+                        labs(title="", # correctly offset title
+                             subtitle = "Revenue share by bike type",
+                             x = "Month",
+                             y = "Revenue (%)", 
+                             fill="Bike Type") +
+                        scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+                        scale_fill_manual(values = c("classic_bike" = CLASSIC_BIKE_COLOR, 
+                                                     "electric_bike" = ELECTRIC_BIKE_COLOR),
+                                          guide = guide_legend(override.aes = list(shape = 16, size = 4))) +
+                        theme_minimal() +
+                        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+combined_plot_biketype <- grid.arrange(plot1_biketype, plot2_biketype, ncol = 2)
+ggsave(filename=filepath_png("income_biketype"), plot = combined_plot_biketype)
