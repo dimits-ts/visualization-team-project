@@ -232,3 +232,35 @@ ggplot(station_revenue, aes(x = total_revenue/10e3)) +
        y = "Number of stations")
 ggsave(filename=filepath_png("income_stations"))
 
+
+# ======== Station profitability based on characteristics ======== 
+stations_df <- read.csv("./data/Capital_Bikeshare_Locations.csv")
+merged_df <- merge(trip_df, stations_df, by.x = "start_station_name", by.y = "NAME", all.x = FALSE)
+
+agg_data_docks <- merged_df %>%
+  group_by(NUM_DOCKS_AVAILABLE) %>%
+  summarise(avg_revenue = mean(price, na.rm = TRUE))
+
+ggplot(agg_data_docks, aes(x = NUM_DOCKS_AVAILABLE, y = avg_revenue)) +
+  geom_point(color = "blue", alpha = 0.5) +
+  labs(title = "Average Revenue by Number of Docks",
+       x = "Number of Docks Available",
+       y = "Average Revenue") +
+  theme_minimal()
+
+
+agg_data_bikes <- merged_df %>%
+  group_by(NUM_BIKES_AVAILABLE) %>%
+  summarise(avg_revenue = mean(price, na.rm = TRUE), 
+            avg_ebikes = mean(NUM_EBIKES_AVAILABLE, na.rm = TRUE))
+
+ggplot(agg_data_bikes, aes(x = NUM_BIKES_AVAILABLE, y = avg_revenue, color = avg_ebikes)) +
+  geom_point(alpha = 1) +
+  scale_color_gradient(low = "red", high = "green") +
+  labs(title="Bike availability can affect station profitability, while ebike availability does not.",
+       subtitle = "Average revenue by station availability",
+       x = "Number of Bikes Available",
+       y = "Average Revenue ($)",
+       color = "Average Number of E-bikes Available") +
+  theme_minimal()
+ggsave(filename=filepath_png("income_stations_bikes"))
