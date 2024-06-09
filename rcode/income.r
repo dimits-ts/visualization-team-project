@@ -6,6 +6,7 @@ library(scales)
 library(gtable)
 library(gridExtra)
 
+
 OUTPUT_PATH = "output"
 
 MEMBER_COLOR <- "blue"
@@ -24,7 +25,7 @@ filepath_png <- function(name) {
 # ======== PREPROCESSING ========
 
 trip_df <- read.csv("./data/tripdata.csv")
-trip_df <- trip_df[, c("month", "year", "rideable_type", "member_casual", "started_at", "ended_at")]
+
 # Add time delta
 str(trip_df)
 
@@ -91,6 +92,7 @@ ggplot(trip_df, aes(x = as.numeric(ride_duration, units = "mins"))) +
        x = "Duration (minutes)",
        y = "Frequency") +
   theme_minimal()
+
 
 # ======== Sum income plot ========
 
@@ -174,7 +176,7 @@ plot1_biketype <- ggplot(revenue_by_month_year, aes(x = year_month,
                         geom_ribbon(aes(ymin = 0, ymax = total_revenue/10e6), alpha = 0.2) +
                         labs(title="Electric bikes increasingly profitable each summer",
                              subtitle="Revenue by bike type", 
-                             x = "Date", 
+                             x = "Month", 
                              y = "Total Revenue ($ Millions)",
                              fill = "Rideable Type") +
                         scale_color_manual(values = c("classic_bike" = CLASSIC_BIKE_COLOR,
@@ -211,3 +213,22 @@ plot2_biketype <- ggplot(income_by_rideable, aes(x = year_month, y = percentage_
 
 combined_plot_biketype <- grid.arrange(plot1_biketype, plot2_biketype, ncol = 2)
 ggsave(filename=filepath_png("income_biketype"), plot = combined_plot_biketype)
+
+
+# ======== Station profitability ======== 
+
+# Calculate total revenue for each station
+station_revenue <- trip_df %>%
+  group_by(start_station_name) %>%
+  summarise(total_revenue = sum(price, na.rm = TRUE))
+
+# Create histogram
+ggplot(station_revenue, aes(x = total_revenue/10e3)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
+  scale_y_continuous(breaks = seq(0, 30)) +
+  labs(title="Revenue hinges on relatively few stations",
+       subtitle = "Total Revenue by Station",
+       x = "Revenue ($ Thousand)",
+       y = "Number of stations")
+ggsave(filename=filepath_png("income_stations"))
+
