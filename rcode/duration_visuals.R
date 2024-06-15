@@ -1,12 +1,10 @@
 rm(list = ls())
-getwd()
-# Change to your Directory
-setwd("C:/Users/vassi/OneDrive/Documents_OneDrive/MSc in Data Science/Spring Semester/Data visualization and communication/Assignments/Project2/visualization-team-project/rcode")
 
 library(ggplot2)
 library(dplyr)
+library(lubridate)
 
-tripdata <- read.csv("tripdata.csv")
+tripdata <- read.csv("../data/tripdata.csv")
 names(tripdata)
 View(tripdata)
 
@@ -17,8 +15,9 @@ ggplot(tripdata, aes(x = duration)) +
   scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +  # Display frequency labels as regular numbers
   labs(x = "Ride Duration (minutes)", y = "Frequency", title = "Distribution of Ride Durations") +
   xlim(0,2500) +
-  theme_minimal()
-
+  theme_minimal()+
+  theme(plot.background = element_rect(fill = "white", color = NA))
+ggsave("../output/ride_duration_distribution.png")
 # ------- Ride Duration over time -------
 
 tripdata$started_at <- as.POSIXct(tripdata$started_at, format = "%Y-%m-%d %H:%M:%S")
@@ -34,7 +33,9 @@ ggplot(avg_duration_month_year, aes(x = month, y = duration, group = year, color
   geom_line(size=1.5) +
   labs(x = "Month", y = "Median Ride Duration", title = "Average Ride Duration Over Time") +
   scale_x_discrete(labels = c("May","June","July","August")) +
-  theme_minimal()
+  theme_minimal() +
+  theme(plot.background = element_rect(fill = "white", color = NA))
+ggsave("../output/ride_duration_per_year_month.png")
 
 # Calculate average ride duration per hour
 avg_duration_hour <- aggregate(duration ~ hour+month, data = tripdata, FUN = median)
@@ -43,7 +44,9 @@ avg_duration_hour <- aggregate(duration ~ hour+month, data = tripdata, FUN = med
 ggplot(avg_duration_hour, aes(x = hour, y = duration, group = month, color = month)) +
   geom_line(size=1.5) +
   labs(x = "Hour of the Day", y = "Median Ride Duration", title = "Median Ride Duration") +
-  theme_minimal()
+  theme_minimal() +
+  theme(plot.background = element_rect(fill = "white", color = NA))
+ggsave("../output/ride_duration_per_hour_month.png")
 
 # ------- Duration by Rideable Type -------
 
@@ -57,7 +60,9 @@ ggplot(tripdata_clean, aes(x = year, y = duration)) +
        x = "Year",
        y = "Duration (seconds)") +
   facet_wrap(~ rideable_type) +
-  theme_minimal()
+  theme_minimal() +
+  theme(plot.background = element_rect(fill = "white", color = NA))
+ggsave("../output/ride_duration_per_biketype_year.png")
 
 # ------- Duration by Member Type -------
 
@@ -65,5 +70,7 @@ ggplot(tripdata, aes(x = duration, colour = member_casual)) +
   scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
   xlim(0,2500) +
   geom_density(size=1.5) +
-  theme_minimal()
+  theme_minimal() +
+  theme(plot.background = element_rect(fill = "white", color = NA))
+ggsave("../output/ride_duration_per_membertype.png")
 
