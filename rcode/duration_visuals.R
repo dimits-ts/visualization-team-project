@@ -1,44 +1,69 @@
 rm(list = ls())
 getwd()
 # Change to your Directory
-setwd("C:/Users/vassi/OneDrive/Documents_OneDrive/MSc in Data Science/Spring Semester/Data visualization and communication/Assignments/Project2")
+setwd("C:/Users/vassi/OneDrive/Documents_OneDrive/MSc in Data Science/Spring Semester/Data visualization and communication/Assignments/Project2/visualization-team-project/rcode")
 
 library(ggplot2)
-library(maps)
 library(dplyr)
-library(mapview) 
-library(sf)
-library(lubridate)
 
 tripdata <- read.csv("tripdata.csv")
+names(tripdata)
 View(tripdata)
 
-# ------------ MAP PLOT OF THE STATIONS ------------
+# ------- Distribution of Ride Durations -------
 
-# Assuming df is your dataframe
-stations_loc <- tripdata %>%
-  group_by(start_station_name) %>%
-  summarise(longitude = first(start_lng),
-            latitude = first(start_lat))
+ggplot(tripdata, aes(x = duration)) +
+  geom_histogram(binwidth = 100, fill = "skyblue", color = "black") +
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +  # Display frequency labels as regular numbers
+  labs(x = "Ride Duration (minutes)", y = "Frequency", title = "Distribution of Ride Durations") +
+  xlim(0,2500) +
+  theme_minimal()
 
-stations_loc <- na.omit(stations_loc)
-View(stations_loc)
+# ------- Ride Duration over time -------
 
-points_sdf = st_as_sf(stations_loc,  
-                      coords = c("longitude", "latitude"), crs = 4326) 
+tripdata$started_at <- as.POSIXct(tripdata$started_at, format = "%Y-%m-%d %H:%M:%S")
+tripdata$month <- format(tripdata$started_at, "%m")
+tripdata$year <- format(tripdata$started_at, "%Y")
+tripdata$hour <- format(tripdata$started_at, "%H")
 
-mapview(points_sdf,zcol = NULL, legend = FALSE, popup = NULL)
+# Calculate average ride duration per month and year
+avg_duration_month_year <- aggregate(duration ~ month + year, data = tripdata, FUN = median)
 
-# --------------------------------------------------
+# Plot 1: Average Ride Duration Over Time
+ggplot(avg_duration_month_year, aes(x = month, y = duration, group = year, color = year)) +
+  geom_line(size=1.5) +
+  labs(x = "Month", y = "Median Ride Duration", title = "Average Ride Duration Over Time") +
+  scale_x_discrete(labels = c("May","June","July","August")) +
+  theme_minimal()
 
-tripdata <- tripdata %>%
-  mutate(started_at = ymd_hms(started_at),
-         ended_at = ymd_hms(ended_at))
+# Calculate average ride duration per hour
+avg_duration_hour <- aggregate(duration ~ hour+month, data = tripdata, FUN = median)
 
-# Calculate duration and create a new column
-tripdata <- tripdata %>%
-  mutate(duration = as.duration(ended_at - started_at))
+# Plot 1: Average Ride Duration Over Time
+ggplot(avg_duration_hour, aes(x = hour, y = duration, group = month, color = month)) +
+  geom_line(size=1.5) +
+  labs(x = "Hour of the Day", y = "Median Ride Duration", title = "Median Ride Duration") +
+  theme_minimal()
 
-# Print the data frame
-View(tripdata)
+# ------- Duration by Rideable Type -------
+
+tripdata_clean <- tripdata %>%
+  filter(!is.na(year) & !is.na(duration))
+
+ggplot(tripdata_clean, aes(x = year, y = duration)) +
+  geom_boxplot(fill = "lightblue") +
+  ylim(0, 2500) +
+  labs(title = "Ride Duration by Rideable Type and Year",
+       x = "Year",
+       y = "Duration (seconds)") +
+  facet_wrap(~ rideable_type) +
+  theme_minimal()
+
+# ------- Duration by Member Type -------
+
+ggplot(tripdata, aes(x = duration, colour = member_casual)) + 
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+  xlim(0,2500) +
+  geom_density(size=1.5) +
+  theme_minimal()
 
